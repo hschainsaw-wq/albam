@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { countByTag, runQuery, type Query } from '../lib/query';
+import { countByTag, groupTags, runQuery, type Query } from '../lib/query';
 import type { Album, SortKey } from '../lib/types';
 import { usePref, useStore } from '../store';
 import { AddAlbumDialog } from './AddAlbumDialog';
@@ -30,13 +30,7 @@ export function Library() {
   const counts = useMemo(() => countByTag(data.albums), [data.albums]);
   const tagName = useMemo(() => new Map(data.tags.map((t) => [t.id, t.name])), [data.tags]);
 
-  const groups = useMemo(() => {
-    const sorted = [...data.tagGroups].sort((a, b) => a.order - b.order);
-    const list = sorted.map((g) => ({ id: g.id, name: g.name, tags: data.tags.filter((t) => t.groupId === g.id) }));
-    const loose = data.tags.filter((t) => !t.groupId || !sorted.some((g) => g.id === t.groupId));
-    if (loose.length) list.push({ id: '', name: sorted.length ? 'その他' : 'タグ', tags: loose });
-    return list.filter((g) => g.tags.length);
-  }, [data.tags, data.tagGroups]);
+  const groups = useMemo(() => groupTags(data.tags, data.tagGroups), [data.tags, data.tagGroups]);
 
   const toggleTag = (id: string) =>
     setQuery({ ...q, tagIds: tagIds.includes(id) ? tagIds.filter((t) => t !== id) : [...tagIds, id] });

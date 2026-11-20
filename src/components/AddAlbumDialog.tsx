@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { parseAppleMusicUrl } from '../lib/appleMusicUrl';
+import { suggestAutoTags, type AutoTag } from '../lib/autoTags';
 import { fetchAlbum, type AlbumInfo } from '../lib/itunes';
 import { newId } from '../lib/reducer';
 import type { Album } from '../lib/types';
-import { go, useStore } from '../store';
+import { go, usePref, useStore } from '../store';
 import { Artwork } from './Artwork';
 import { Modal } from './Modal';
 import { StarRating } from './StarRating';
@@ -23,6 +24,9 @@ export function AddAlbumDialog({ onClose }: { onClose: () => void }) {
   const [rating, setRating] = useState<number | undefined>();
   const [memo, setMemo] = useState('');
   const [manual, setManual] = useState({ title: '', artist: '', artworkUrl: '', appleMusicUrl: '' });
+  const [autoPref] = usePref<AutoTagPref>('autoTag', defaultAutoTagPref);
+  const [autoTags, setAutoTags] = useState<AutoTag[]>([]);
+  const [autoOff, setAutoOff] = useState<string[]>([]);
 
   const lookup = async () => {
     const parsed = parseAppleMusicUrl(url);
@@ -41,17 +45,20 @@ export function AddAlbumDialog({ onClose }: { onClose: () => void }) {
         setStep({ s: 'url', error: 'このアルバムは登録済みです', existingId: info.id });
         return;
       }
+      setAutoTags(autoPref.enabled ? suggestAutoTags(info) : []);
+      setAutoOff([]);
       setStep({ s: 'preview', info });
     } catch (e) {
       setStep({ s: 'url', error: e instanceof Error ? e.message : String(e) });
     }
   };
 
-  const save = (base: Omit<Album, 'tagIds' | 'rating' | 'memo' | 'addedAt' | 'updatedAt'>) => {
+  const save = (base: Omit<Album, 'tagIds' | 'rating' | 'memo' | 'addedAt' | 'updatedAt'>, auto: AutoTag[] = []) => {
     const t = new Date().toISOString();
     dispatch({
       type: 'addAlbum',
       album: { ...base, tagIds, rating, memo: memo.trim() || undefined, addedAt: t, updatedAt: t },
+      autoTags: auto.filter((a) => !autoOff.includes(a.name)),
     });
     onClose();
   };
@@ -128,7 +135,7 @@ export function AddAlbumDialog({ onClose }: { onClose: () => void }) {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            save(step.info);
+            save(step.info, autoTags);
           }}
         >
           <div className="preview">
@@ -143,6 +150,29 @@ export function AddAlbumDialog({ onClose }: { onClose: () => void }) {
               </div>
             </div>
           </div>
+          {autoTags.length > 0 && (
+            <>
+              <label className="field-label">自動タグ</label>
+              <div className="chips">
+                {autoTags.map((a) => {
+                  const on = !autoOff.includes(a.name);
+                  return (
+                    <button
+                      key={a.name}
+                      type="button"
+                      className={`chip ${on ? 'on' : ''}`}
+                      aria-pressed={on}
+                      title={a.group}
+                      onClick={() => setAutoOff(on ? [...autoOff, a.name] : autoOff.filter((n) => n !== a.name))}
+                    >
+                      <span className="chip-group">{a.group}</span> {a.name}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="muted small">発売日とジャンルから自動で付けます。タップで外せます。</p>
+            </>
+          )}
           {extras}
           <div className="actions">
             <button type="button" className="btn" onClick={() => setStep({ s: 'url' })}>
@@ -199,3 +229,6 @@ export function AddAlbumDialog({ onClose }: { onClose: () => void }) {
     </Modal>
   );
 }
+
+export type AutoTagPref = { enabled: boolean };
+export const defaultAutoTagPref: AutoTagPref = { enabled: true };

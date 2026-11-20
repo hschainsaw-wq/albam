@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { groupTags } from '../lib/query';
 import { findTagByName, newId } from '../lib/reducer';
 import { useStore } from '../store';
 
@@ -9,13 +10,7 @@ export function TagPicker({ value, onChange }: Props) {
   const { data, dispatch } = useStore();
   const [text, setText] = useState('');
 
-  const groups = useMemo(() => {
-    const sorted = [...data.tagGroups].sort((a, b) => a.order - b.order);
-    const list = sorted.map((g) => ({ id: g.id, name: g.name, tags: data.tags.filter((t) => t.groupId === g.id) }));
-    const loose = data.tags.filter((t) => !t.groupId || !sorted.some((g) => g.id === t.groupId));
-    if (loose.length) list.push({ id: '', name: sorted.length ? 'その他' : 'タグ', tags: loose });
-    return list.filter((g) => g.tags.length);
-  }, [data.tags, data.tagGroups]);
+  const groups = useMemo(() => groupTags(data.tags, data.tagGroups), [data.tags, data.tagGroups]);
 
   const toggle = (id: string) =>
     onChange(value.includes(id) ? value.filter((t) => t !== id) : [...value, id]);
