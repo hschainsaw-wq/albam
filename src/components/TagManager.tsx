@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { countByTag } from '../lib/query';
+import { compareTagNames, countByTag } from '../lib/query';
 import { findTagByName, newId } from '../lib/reducer';
 import type { Tag } from '../lib/types';
 import { useStore } from '../store';
@@ -86,7 +86,7 @@ function TagTable({ tags, counts }: { tags: Tag[]; counts: Map<string, number> }
   const { data, dispatch } = useStore();
   const [merging, setMerging] = useState<string | null>(null);
   if (!tags.length) return <p className="muted small">このグループにタグはありません</p>;
-  const sorted = [...tags].sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+  const sorted = [...tags].sort(compareTagNames);
   return (
     <ul className="tag-table">
       {sorted.map((t) => (
@@ -137,7 +137,7 @@ function TagTable({ tags, counts }: { tags: Tag[]; counts: Map<string, number> }
                 </option>
                 {data.tags
                   .filter((x) => x.id !== t.id)
-                  .sort((a, b) => a.name.localeCompare(b.name, 'ja'))
+                  .sort(compareTagNames)
                   .map((x) => (
                     <option key={x.id} value={x.id}>
                       {x.name}

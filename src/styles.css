@@ -222,3 +222,6 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 .inline-edit input { width: 12em; flex: 1; }
 .import-box { margin-top: 12px; padding: 12px; background: var(--surface-2); border-radius: 8px; }
 .import-box p { margin: 0 0 8px; }
+.chip-group { font-size: 0.72rem; opacity: 0.75; }
+.check { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 6px; cursor: pointer; }
+.check input { margin-top: 4px; width: auto; }

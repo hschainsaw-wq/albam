@@ -1,4 +1,4 @@
-import type { Album, SortDir, SortKey, TagMode } from './types';
+import type { Album, SortDir, SortKey, Tag, TagGroup, TagMode } from './types';
 
 export type Query = {
   keyword: string;
@@ -49,4 +49,18 @@ export function countByTag(albums: Album[]): Map<string, number> {
   const m = new Map<string, number>();
   for (const a of albums) for (const t of a.tagIds) m.set(t, (m.get(t) ?? 0) + 1);
   return m;
+}
+
+export type TagSection = { id: string; name: string; tags: Tag[] };
+
+export const compareTagNames = (a: Tag, b: Tag) => collator.compare(a.name, b.name);
+
+/** タグをグループごとにまとめる（グループは並び順、タグは名前順。数字は数値として比較） */
+export function groupTags(tags: Tag[], groups: TagGroup[]): TagSection[] {
+  const sorted = [...groups].sort((a, b) => a.order - b.order);
+  const byName = [...tags].sort(compareTagNames);
+  const list: TagSection[] = sorted.map((g) => ({ id: g.id, name: g.name, tags: byName.filter((t) => t.groupId === g.id) }));
+  const loose = byName.filter((t) => !t.groupId || !sorted.some((g) => g.id === t.groupId));
+  if (loose.length) list.push({ id: '', name: sorted.length ? 'その他' : 'タグ', tags: loose });
+  return list.filter((s) => s.tags.length);
 }

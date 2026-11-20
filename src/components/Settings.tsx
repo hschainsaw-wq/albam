@@ -1,13 +1,28 @@
 import { useRef, useState } from 'react';
+import { applyAutoTagsToAll } from '../lib/autoTags';
 import { parseBackup } from '../lib/reducer';
 import type { Data } from '../lib/types';
-import { useStore } from '../store';
+import { usePref, useStore } from '../store';
+import { defaultAutoTagPref, type AutoTagPref } from './AddAlbumDialog';
 
 export function Settings() {
   const { data, dispatch } = useStore();
   const fileRef = useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState<Data | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [autoPref, setAutoPref] = usePref<AutoTagPref>('autoTag', defaultAutoTagPref);
+  const [autoMsg, setAutoMsg] = useState<string | null>(null);
+
+  const autoTagAll = () => {
+    const { added } = applyAutoTagsToAll(data);
+    if (added === 0) {
+      setAutoMsg('新しく付けるタグはありませんでした');
+      return;
+    }
+    if (!confirm(`登録済みのアルバムに、年代・ジャンルのタグを合計${added}個付けます。よろしいですか？`)) return;
+    dispatch({ type: 'autoTagAll' });
+    setAutoMsg(`${added}個のタグを付けました`);
+  };
 
   const exportJson = () => {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -52,6 +67,30 @@ export function Settings() {
         <p className="muted small">
           別の端末へ移すときは、この画面で書き出したファイルを、移す先の端末で読み込んでください。
         </p>
+      </section>
+
+      <section className="panel">
+        <h2>自動タグ</h2>
+        <label className="check">
+          <input
+            type="checkbox"
+            checked={autoPref.enabled}
+            onChange={(e) => setAutoPref({ enabled: e.target.checked })}
+          />
+          アルバムを追加するとき、発売年代とジャンルのタグを自動で付ける
+        </label>
+        <p className="muted small">
+          「年代」「ジャンル」グループに「1990年代」「ロック」のようなタグを付けます。ジャンルは Apple の細かい分類をおおまかにまとめたものです。
+        </p>
+        <button className="btn" onClick={autoTagAll} disabled={data.albums.length === 0}>
+          登録済みのアルバムにも付ける
+        </button>
+        <p className="muted small">外したタグもまた付くので、外したい場合はあとで個別に外してください。</p>
+        {autoMsg && (
+          <p className="ok" role="status">
+            {autoMsg}
+          </p>
+        )}
       </section>
 
       <section className="panel">

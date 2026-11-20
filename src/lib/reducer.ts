@@ -1,3 +1,4 @@
+import { applyAutoTags, applyAutoTagsToAll, type AutoTag } from './autoTags';
 import type { Album, Data, Tag, TagGroup } from './types';
 
 export const newId = () =>
@@ -11,7 +12,8 @@ export type AlbumPatch = Partial<Omit<Album, 'id' | 'addedAt'>>;
 
 export type Action =
   | { type: 'load'; data: Data }
-  | { type: 'addAlbum'; album: Album }
+  | { type: 'addAlbum'; album: Album; autoTags?: AutoTag[] }
+  | { type: 'autoTagAll' }
   | { type: 'updateAlbum'; id: string; patch: AlbumPatch }
   | { type: 'deleteAlbum'; id: string }
   | { type: 'addTag'; tag: Tag }
@@ -39,7 +41,14 @@ export function reducer(state: Data, action: Action): Data {
 
     case 'addAlbum':
       if (state.albums.some((a) => a.id === action.album.id)) return state;
-      return { ...state, albums: [...state.albums, action.album] };
+      return applyAutoTags(
+        { ...state, albums: [...state.albums, action.album] },
+        action.album.id,
+        action.autoTags ?? [],
+      );
+
+    case 'autoTagAll':
+      return applyAutoTagsToAll(state).data;
 
     case 'updateAlbum':
       return {
