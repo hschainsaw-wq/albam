@@ -13,40 +13,9 @@ export function decadeLabel(releaseDate?: string): string | undefined {
   return `${Math.floor(y / 10) * 10}年代`;
 }
 
-/**
- * Apple のジャンル名（英語・日本語どちらでも）を、おおまかな日本語ジャンルにまとめる。
- * 表にないジャンルはそのままの名前を使う。
- */
-const GENRE_RULES: [RegExp, string][] = [
-  [/^(j-?pop|jポップ)$/i, 'J-POP'],
-  [/^(k-?pop|kポップ)$/i, 'K-POP'],
-  [/anime|アニメ/i, 'アニメ'],
-  [/soundtrack|score|musicals?|サウンドトラック|サントラ/i, 'サウンドトラック'],
-  [/hip-?hop|rap|ヒップホップ|ラップ/i, 'ヒップホップ'],
-  [/r&b|soul|funk|disco|motown|ソウル|ファンク/i, 'R&B/ソウル'],
-  [/jazz|bebop|big band|swing|bossa|ジャズ|ボサ/i, 'ジャズ'],
-  [/classical|opera|baroque|クラシック|オペラ/i, 'クラシック'],
-  [/alternative|indie|オルタナ|インディ/i, 'オルタナティブ'],
-  [/electronic|electronica|dance|house|techno|trance|ambient|downtempo|idm|edm|drum|dubstep|エレクトロ|ダンス|テクノ|ハウス|アンビエント/i, 'エレクトロニック'],
-  [/metal|メタル/i, 'ロック'],
-  [/rock|punk|grunge|ロック|パンク/i, 'ロック'],
-  [/pop|ポップ/i, 'ポップ'],
-  [/singer\/?songwriter|シンガー/i, 'シンガーソングライター'],
-  [/country|カントリー/i, 'カントリー'],
-  [/blues|ブルース/i, 'ブルース'],
-  [/reggae|ska|dancehall|レゲエ/i, 'レゲエ'],
-  [/latin|salsa|samba|ラテン/i, 'ラテン'],
-  [/world|ワールド/i, 'ワールド'],
-  [/folk|フォーク/i, 'フォーク'],
-  [/enka|演歌|歌謡/i, '歌謡曲/演歌'],
-  [/children|キッズ|童謡/i, 'キッズ'],
-];
-
+/** Apple のジャンル名をそのままタグ名にする */
 export function genreLabel(genre?: string): string | undefined {
-  const g = genre?.trim();
-  if (!g) return undefined;
-  for (const [re, label] of GENRE_RULES) if (re.test(g)) return label;
-  return g;
+  return genre?.trim() || undefined;
 }
 
 export function suggestAutoTags(album: { releaseDate?: string; genre?: string }): AutoTag[] {

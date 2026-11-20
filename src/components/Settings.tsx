@@ -80,7 +80,7 @@ export function Settings() {
           アルバムを追加するとき、発売年代とジャンルのタグを自動で付ける
         </label>
         <p className="muted small">
-          「年代」「ジャンル」グループに「1990年代」「ロック」のようなタグを付けます。ジャンルは Apple の細かい分類をおおまかにまとめたものです。
+          「年代」「ジャンル」グループに「1990年代」「Alternative」のようなタグを付けます。ジャンル名は Apple の分類をそのまま使います。
         </p>
         <button className="btn" onClick={autoTagAll} disabled={data.albums.length === 0}>
           登録済みのアルバムにも付ける

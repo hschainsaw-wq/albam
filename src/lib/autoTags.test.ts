@@ -22,18 +22,15 @@ describe('decadeLabel', () => {
 });
 
 describe('genreLabel', () => {
-  it.each([
-    ['Rock', 'ロック'], ['Hard Rock', 'ロック'], ['Metal', 'ロック'], ['Punk', 'ロック'], ['ロック', 'ロック'],
-    ['Pop', 'ポップ'], ['ポップ', 'ポップ'], ['J-Pop', 'J-POP'], ['K-Pop', 'K-POP'],
-    ['Alternative', 'オルタナティブ'], ['Indie Rock', 'オルタナティブ'],
-    ['Hip-Hop/Rap', 'ヒップホップ'], ['ヒップホップ/ラップ', 'ヒップホップ'],
-    ['R&B/Soul', 'R&B/ソウル'], ['Jazz', 'ジャズ'], ['Vocal Jazz', 'ジャズ'],
-    ['Electronic', 'エレクトロニック'], ['Dance', 'エレクトロニック'],
-    ['Soundtrack', 'サウンドトラック'], ['Anime', 'アニメ'], ['Classical', 'クラシック'],
-    ['Singer/Songwriter', 'シンガーソングライター'],
-    ['Christian & Gospel', 'Christian & Gospel'],
-  ])('%s → %s', (g, want) => expect(genreLabel(g)).toBe(want));
-  it('empty → undefined', () => expect(genreLabel('  ')).toBeUndefined());
+  it('uses the Apple genre name as is', () => {
+    expect(genreLabel('Hard Rock')).toBe('Hard Rock');
+    expect(genreLabel(' Hip-Hop/Rap ')).toBe('Hip-Hop/Rap');
+    expect(genreLabel('J-Pop')).toBe('J-Pop');
+  });
+  it('empty → undefined', () => {
+    expect(genreLabel('  ')).toBeUndefined();
+    expect(genreLabel(undefined)).toBeUndefined();
+  });
 });
 
 describe('applyAutoTags', () => {
@@ -42,17 +39,17 @@ describe('applyAutoTags', () => {
   it('creates groups and tags on first use, reuses them afterwards', () => {
     let d = applyAutoTags(base(), '1', suggestAutoTags({ releaseDate: '1994-01-01', genre: 'Rock' }));
     expect(d.tagGroups.map((g) => g.name)).toEqual(['年代', 'ジャンル']);
-    expect(d.tags.map((t) => t.name)).toEqual(['1990年代', 'ロック']);
+    expect(d.tags.map((t) => t.name)).toEqual(['1990年代', 'Rock']);
     expect(d.albums[0].tagIds).toEqual(d.tags.map((t) => t.id));
 
-    d = reducer(d, { type: 'addAlbum', album: album('2'), autoTags: suggestAutoTags({ releaseDate: '1998-01-01', genre: 'Hard Rock' }) });
+    d = reducer(d, { type: 'addAlbum', album: album('2'), autoTags: suggestAutoTags({ releaseDate: '1998-01-01', genre: 'Rock' }) });
     expect(d.tags).toHaveLength(2);
     expect(d.albums[1].tagIds).toEqual(d.albums[0].tagIds);
   });
 
   it('uses an existing same-named tag even outside the group', () => {
-    const d0: Data = { ...base(), tags: [{ id: 'mine', name: 'ロック' }] };
-    const d = applyAutoTags(d0, '1', [{ group: 'ジャンル', name: 'ロック' }]);
+    const d0: Data = { ...base(), tags: [{ id: 'mine', name: 'rock' }] };
+    const d = applyAutoTags(d0, '1', [{ group: 'ジャンル', name: 'Rock' }]);
     expect(d.tags).toHaveLength(1);
     expect(d.tagGroups).toHaveLength(0);
     expect(d.albums[0].tagIds).toEqual(['mine']);
